@@ -24,8 +24,8 @@ void interface_assign_mac_address(interface_t* interface){
         node_t* node = interface->att_node;
 
         if(!node) return;
+	unsigned int hash_code_val = 0;
 
-        unsigned int hash_code_val = 0;
 
         hash_code_val = hash_code(node->node_name, NODE_NAME_SIZE);
         hash_code_val *= hash_code(interface->if_name, IF_NAME_SIZE);
@@ -74,6 +74,7 @@ bool_t node_unset_intf_ip_address(node_t* node, char* local_if){
 
 void dump_node_nw_props(node_t* node){
 	//printf("\nNode name = %s, upd_port_no = %u\n", node->node_name, node->upd_port_number);
+	printf("\nNode name =%s\n", node->node_name); 
 	//printf("\t node flags : %u", node->node_nw_prop.flags);
 	if(node->node_nw_prop.is_lb_addr_config){
 		printf("\t	lo addr : %s/32", NODE_LO_ADDR(node));
@@ -110,7 +111,9 @@ void dump_nw_graph(graph_t* graph){
 		for(i = 0; i < MAX_INTF_PER_NODE; i++){
 			
 			interface = node->intf[i];
-			if(!interface) break;
+			if(!interface) {
+				break;
+			}
 			dump_intf_props(interface);		
 		}
 	}ITERATE_GLTHREAD_END(&graph->node_list, curr);

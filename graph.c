@@ -30,6 +30,11 @@ void insert_link_between_two_nodes(node_t *node1, node_t* node2, char *from_if_n
 	init_intf_nw_prop(&link->intf1.intf_nw_props);
 	init_intf_nw_prop(&link->intf2.intf_nw_props);
 
+	//Assign MAC address to each interface
+	interface_assign_mac_address(&link->intf1);
+	interface_assign_mac_address(&link->intf2);
+	
+
 }
 
 

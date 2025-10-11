@@ -24,7 +24,7 @@ typedef struct ip_add_{
 } ip_add_t;
 
 typedef struct mac_add_{
-	char mac[8];
+	unsigned char mac[6];
 }mac_add_t;
 
 typedef struct node_nw_prop{
@@ -50,7 +50,7 @@ typedef struct intf_nw_props_{
 
 static inline void init_intf_nw_prop(intf_nw_props_t* intf_nw_props){
 
-	memset(intf_nw_props->mac_add.mac, 0, 8);
+	memset(intf_nw_props->mac_add.mac, 0, sizeof(intf_nw_props->mac_add.mac));
 	intf_nw_props->is_ipadd_config = FALSE;
 	memset(intf_nw_props->ip_add.ip_addr, 0, 16);
 
