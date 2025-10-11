@@ -1,5 +1,6 @@
 #include <assert.h>
 #include "gluethread/glthread.h"
+#include "net.h"
 
 
 
@@ -12,11 +13,13 @@
 typedef struct node_ node_t;
 typedef struct link_ link_t;
 
-typedef struct interface{
+typedef struct interface_{
 	
 	char if_name[IF_NAME_SIZE];
 	struct node_ *att_node;
 	struct link_ *link;
+	intf_nw_props_t intf_nw_props;
+
 }interface_t;
 
 struct link_{
@@ -28,10 +31,13 @@ struct link_{
 struct node_{
 	char node_name[NODE_NAME_SIZE];
 	interface_t *intf[MAX_INTF_PER_NODE];
+	node_nw_prop_t node_nw_prop;
+	
 	glthread_t graph_glue;
+	
 };
 
-typedef struct graph{
+typedef struct graph_{
 
 	char topology_name[32];
 	glthread_t node_list;
@@ -69,12 +75,12 @@ static inline interface_t * get_node_if_by_name(node_t* node, char* if_name){
 
 	interface_t* intf;
 
-	for(int i = 0; i < MAX_INFT_PER_NODE; i++){
+	for(int i = 0; i < MAX_INTF_PER_NODE; i++){
 	
 		intf = node->intf[i];
 		if(!intf) return NULL;
 
-		if(strncmp(intf[i]->if_name, if_name, IF_NAME_SIZE) == 0){
+		if(strncmp(intf->if_name, if_name, IF_NAME_SIZE) == 0){
 			return node->intf[i];
 		}
 
@@ -84,7 +90,7 @@ static inline interface_t * get_node_if_by_name(node_t* node, char* if_name){
 	 
 }
 
-static line node_t* get_node_by_node_name(graph_t *topo, char* node_name){
+static inline node_t* get_node_by_node_name(graph_t *topo, char* node_name){
 
 	node_t* node;
 	glthread_t *curr;
