@@ -61,8 +61,16 @@ bool_t node_set_loopback_address(node_t *node, char* ip_addr);
 bool_t node_set_intf_ip_address(node_t *node, char *local_if, char* ip_addr, char mask);
 bool_t node_unset_intf_ip_address(node_t *node, char *local_if);
 
+interface_t* node_get_matching_subnet_interface(node_t* node, char* ip_addr);
+
+
 void interface_assign_mac_address(interface_t* interface);
+void convert_ip_from_int_to_str(unsigned int ip_addr, char *output_buffer);
+
+unsigned int convert_ip_from_str_to_int(char *ip_addr);
+
 
 void dump_nw_graph(graph_t * graph);
+
 
 #endif

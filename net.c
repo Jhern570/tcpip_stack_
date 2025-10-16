@@ -1,6 +1,6 @@
 #include "graph.h"
 #include <memory.h>
-//#include "utlis.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -72,6 +72,38 @@ bool_t node_unset_intf_ip_address(node_t* node, char* local_if){
 	return TRUE;
 }
 
+interface_t* node_get_matching_subnet_interface(node_t* node, char* ip_addr){
+
+	unsigned int i = 0;
+	interface_t* intf;
+
+	char* intf_addr = NULL;
+	char mask;
+	char intf_subnet[16];
+	char subnet2[16];
+
+	for(; i < MAX_INTF_PER_NODE; i++){
+		intf = node->intf[i];
+		if(!intf) return NULL;
+
+		if(intf->intf_nw_props.is_ipadd_config == FALSE) continue;
+
+		intf_addr = IF_IP(intf);
+		mask = intf->intf_nw_props.mask;
+
+		memset(intf_subnet, 0, 16);
+		memset(subnet2, 0, 16);
+
+		apply_mask(intf_addr, mask, intf_subnet);
+		apply_mask(ip_addr, mask, subnet2);
+
+		if(strncmp(intf_subnet, subnet2, 16) == 0){
+			return intf;
+		}
+	}	
+}
+
+
 void dump_node_nw_props(node_t* node){
 	//printf("\nNode name = %s, upd_port_no = %u\n", node->node_name, node->upd_port_number);
 	printf("\nNode name =%s\n", node->node_name); 
@@ -82,7 +114,7 @@ void dump_node_nw_props(node_t* node){
 	printf("\n");
 }
 
-void dump_intf_props(interface_t* interface){
+void dump_intf_props(interface_t* interface){	
 	dump_interface(interface);
 
 	if(interface->intf_nw_props.is_ipadd_config){

@@ -1,0 +1,18 @@
+.
+show topology
+.
+show topology
+.
+show topology
+run node R0_re resolve_arp 20.1.1.1
+run node R1_re resolve_arp 40.1.1.1
+run node R3_re resolve_arp 40.1.1.1
+.
+show topology
+.
+run node R0_re resolve-arp 20.1.1.1.
+.
+run node R3_re resolve-arp 20.1.1.1
+.
+run node R23_re resolve-arp 20.1.1.1
+run node R2_re resolve-arp 20.1.1.1
