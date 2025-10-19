@@ -22,7 +22,7 @@ int pkt_receive(node_t* node, interface_t* interface, char* pkt, unsigned int pk
 	 *Ingress journey of the packey starts from
 	 *here in the TCP/IP stack*/
 	
-	printf("msg rcvd = %s, on node = %s, IFF = %s\n", pkt, node->node_name, interface->if_name);	
+	printf("msg rcvd = '%s', on node = %s, IFF = %s\n", pkt, node->node_name, interface->if_name);	
 
 	return 0;
 
