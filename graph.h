@@ -33,6 +33,11 @@ struct node_{
 	interface_t *intf[MAX_INTF_PER_NODE];
 	node_nw_prop_t node_nw_prop;
 	
+	//UDP Sockets
+	unsigned int udp_port_number;
+	int udp_sock_fd;
+
+	//glthread ponters
 	glthread_t graph_glue;
 	
 };

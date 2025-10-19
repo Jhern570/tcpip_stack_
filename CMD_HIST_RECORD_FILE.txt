@@ -16,3 +16,8 @@ run node R3_re resolve-arp 20.1.1.1
 .
 run node R23_re resolve-arp 20.1.1.1
 run node R2_re resolve-arp 20.1.1.1
+.
+show help
+cls
+cls
+.
