@@ -114,7 +114,7 @@ int send_pkt_flood(node_t* node, interface_t* exempted_interface, char* pkt, uns
 		//if(!intf) return 0;
 		if(!intf) continue;
 
-		if(!intf == exempted_interface) continue;
+		if(intf == exempted_interface) continue;
 		send_pkt_out(pkt, pkt_size, intf);
 	}
 	return 0;

@@ -22,3 +22,9 @@ cls
 cls
 .
 .
+show topo
+.
+.
+show topology
+show topology
+.

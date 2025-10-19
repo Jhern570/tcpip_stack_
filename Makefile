@@ -5,6 +5,7 @@ TARGET=test.exe
 
 OBJS=gluethread/glthread.o \
      	graph.o		   \
+	topology.o         \
 	net.o		   \
 	utils.o		   \
 	nwcli.o		   \
@@ -22,6 +23,9 @@ gluethread/glthread.o:gluethread/glthread.c
 
 graph.o:graph.c
 	${CC} ${CFLAGS} -c -I . graph.c -o graph.o
+
+topology.o:topology.c
+	${CC} ${CFLAGS} -c -I . topology.c -o topology.o
 
 net.o:net.c
 	${CC} ${CFLAGS} -c -I . net.c -o net.o

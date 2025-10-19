@@ -50,6 +50,13 @@ typedef struct graph_{
 
 GLTHREAD_TO_STRUCT(graph_glue_to_node, node_t, graph_glue);
 
+
+node_t* create_graph_node(graph_t* graph, char* node_name);
+
+graph_t* create_new_graph(char* topology_name);
+
+void insert_link_between_two_nodes(node_t* node1, node_t* node2, char* from_if_name, char* to_if_name, unsigned int cost);
+
 //Helper functions
 static inline node_t* get_nbr_node(interface_t*interface){
 

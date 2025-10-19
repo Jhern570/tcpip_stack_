@@ -47,6 +47,12 @@ void insert_link_between_two_nodes(node_t *node1, node_t* node2, char *from_if_n
 graph_t* create_new_graph(char *topology_name){
 
 	graph_t* graph = calloc(1, sizeof(graph_t));
+
+	if(!graph){
+		printf("Error : Could not create graph struct!\n");
+		return 0;
+	}
+
 	strncpy(graph->topology_name, topology_name, 32);
 	graph->topology_name[31] = '\0';
 	
