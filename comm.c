@@ -101,6 +101,27 @@ int send_pkt_out(char *pkt, unsigned int pkt_size, interface_t* interface){
 
 }
 
+int send_pkt_flood(node_t* node, interface_t* exempted_interface, char* pkt, unsigned int pkt_size){
+
+	unsigned int i = 0;
+
+	interface_t* intf;
+
+	for(; i < MAX_INTF_PER_NODE; i++){
+		intf = node->intf[i];
+
+		
+		//if(!intf) return 0;
+		if(!intf) continue;
+
+		if(!intf == exempted_interface) continue;
+		send_pkt_out(pkt, pkt_size, intf);
+	}
+	return 0;
+}
+
+
+
 static unsigned int get_next_udp_port_number(){
 
 	return udp_port_number++;
