@@ -12,6 +12,10 @@ typedef struct node_ node_t;
 
 #define NODE_LO_ADDR(node_ptr)	((node_ptr)->node_nw_prop.lb_addr.ip_addr)
 
+#define IS_INT_L3_MODE(intf_ptr) (intf_ptr->intf_nw_props.is_ipadd_config == TRUE)
+	
+
+
 typedef enum{
 
   FALSE,
