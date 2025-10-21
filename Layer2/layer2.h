@@ -15,17 +15,64 @@
 
 
 #pragma pack (push,1)
+typedef struct arp_hdr_{
+
+	short hw_type;		//1 for ethernet cable
+	short proto_type;	//0x0800 for IPV4
+	char hw_addr_len;	//6 for MAC
+	char proto_addr_len;	//4 for IPV4
+	short op_code;		//req of reply
+	mac_add_t src_mac;	//MAC of OIF interface
+	unsigned int src_ip;	//IP of OIF;
+	mac_add_t dst_mac;	//? need to ask
+	unsigned int dst_ip;	//Ip for which ARP is being resolved
+}arp_hdr_t;
+
 typedef struct ethernet_hdr_{
 	
 	mac_add_t dst_mac;
 	mac_add_t src_mac;
-	short type;
-	char payload[248];
+	unsigned short type;
+	char payload[248]; //eg. arp header
 	unsigned int FCS;
 
 }ethernet_hdr_t;
 #pragma pack(pop)
 
+
+//ARP Table APIs
+typedef struct arp_table_{
+	glthread_t arp_entries;
+}arp_table_t;
+
+typedef struct arp_entry_{
+	ip_add_t ip_addr; //key
+	mac_add_t mac_addr;
+	char oif_name[IF_NAME_SIZE];
+	glthread_t arp_glue;
+	
+}arp_entry_t;
+
+GLTHREAD_TO_STRUCT(arp_glue_to_arp_entry, arp_entry_t, arp_glue);
+
+
+
+void init_arp_table(arp_table_t **arp_table);
+
+arp_entry_t* arp_table_lookup(arp_table_t* arp_table, char *ip_addr);
+
+void clear_arp_table(arp_table_t* arp_table);
+
+void delete_arp_table_entry(arp_table_t* arp_table, char *ip_addr);
+
+bool_t arp_table_entry_add(arp_table_t*  arp_table, arp_entry_t arp_entry);
+
+void dump_arp_table(arp_table_t* arp_table);
+
+void arp_table_update_from_arp_reply(arp_table_t* arp_table, arp_hdr_t* arp_hdr, interface_t *intf);
+
+//Dump API ARP Table
+void dump_arp_table(arp_table_t* art_table);
 
 static inline void SET_COMMON_ETH_FCS(ethernet_hdr_t* eth_hdr, unsigned int pkt_siz, unsigned int new_fcs){
 

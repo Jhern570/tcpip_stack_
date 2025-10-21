@@ -13,10 +13,10 @@ void apply_mask(char* prefix, char mask, char *str_prefix);
 
 void layer2_fill_with_broadcast_mac(char* mac_array);
 
-void convert_ip_from_int_to_str(unsigned int ip_addr,
+void tcp_ip_from_n_to_p(unsigned int ip_addr,
         char *output_buffer);
 
-unsigned int convert_ip_from_str_to_int(char *ip_addr);
+unsigned int tcp_ip_from_p_to_n(char *ip_addr);
 
 
 

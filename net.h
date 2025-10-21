@@ -7,6 +7,8 @@ typedef struct graph_ graph_t;
 typedef struct interface_ interface_t;
 typedef struct node_ node_t;
 
+typedef struct arp_table_ arp_table_t;
+
 #define IF_MAC(intf_ptr)   	((intf_ptr)->intf_nw_props.mac_add.mac)
 #define IF_IP(intf_ptr)   	((intf_ptr)->intf_nw_props.ip_add.ip_addr)
 
@@ -14,6 +16,8 @@ typedef struct node_ node_t;
 
 #define IS_INT_L3_MODE(intf_ptr) (intf_ptr->intf_nw_props.is_ipadd_config == TRUE)
 	
+
+extern void init_arp_table(arp_table_t** arp_table);
 
 
 typedef enum{
@@ -32,14 +36,26 @@ typedef struct mac_add_{
 }mac_add_t;
 
 typedef struct node_nw_prop{
+	
+	/*Used to find various device types capabilities of
+	 * the node and other features
+	 * */
+	unsigned int flag;
+	
+	//L2 properties
+	arp_table_t* arp_table;
+	
 	//L3 properties
 	bool_t is_lb_addr_config;
 	ip_add_t lb_addr; //loopback address of node
 }node_nw_prop_t;
 
 static inline void init_node_nw_prop(node_nw_prop_t* node_nw_prop){
+	
+	node_nw_prop->flag = 0;
 	node_nw_prop->is_lb_addr_config = FALSE;
 	memset(node_nw_prop->lb_addr.ip_addr, 0, 16);
+	init_arp_table(&(node_nw_prop->arp_table));
 }
 
 typedef struct intf_nw_props_{
@@ -73,10 +89,12 @@ interface_t* node_get_matching_subnet_interface(node_t* node, char* ip_addr);
 
 
 void interface_assign_mac_address(interface_t* interface); 
-void convert_ip_from_int_to_str(unsigned int ip_addr, char *output_buffer);
 
-unsigned int convert_ip_from_str_to_int(char *ip_addr);
+/*
+void tcp_ip_from_n_to_p(unsigned int ip_addr, char *output_buffer);
 
+unsigned int tcp_ip_from_p_to_n(char *ip_addr);
+*/
 
 void dump_nw_graph(graph_t * graph);
 

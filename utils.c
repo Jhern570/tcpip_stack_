@@ -2,7 +2,7 @@
 #include <arpa/inet.h>
 #include <stdint.h>
 #include <string.h>
-
+#include <stdio.h>
 void apply_mask(char* prefix, char mask, char *str_prefix){
 
 	uint32_t binary_prefix = 0;
@@ -37,15 +37,17 @@ void layer2_fill_with_broadcast_mac(char* mac_addr){
 	}
 }
 
-void convert_ip_from_int_to_str(unsigned int ip_addr,
+void tcp_ip_from_n_to_p(unsigned int ip_addr,
         char *output_buffer){
+
     memset(output_buffer, 0, 16);
     ip_addr = htonl(ip_addr);
+    //ip_addr = ntohl(ip_addr);
     inet_ntop(AF_INET, &ip_addr, output_buffer, 16);
     output_buffer[15] = '\0';
 }
 
-unsigned int convert_ip_from_str_to_int(char *ip_addr){
+unsigned int tcp_ip_from_p_to_n(char *ip_addr){
 
     unsigned int binary_prefix = 0;
     inet_pton(AF_INET, ip_addr, &binary_prefix);
