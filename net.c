@@ -67,6 +67,32 @@ bool_t node_set_intf_ip_address(node_t* node, char* local_if, char* ip_addr, cha
 	return TRUE;
 }
 
+char* pkt_buffer_shift_right(char* pkt, unsigned int pkt_size, unsigned int total_buffer_size){
+
+
+	unsigned int new_size = total_buffer_size - IF_NAME_SIZE;
+	char* temp = NULL;
+
+	bool_t need_temp_memory = (pkt_size * 2 > total_buffer_size) ? TRUE : FALSE;
+
+
+	if(need_temp_memory){
+		temp = calloc(1, pkt_size);
+		memcpy(temp, pkt, pkt_size);
+		memset(pkt, 0, total_buffer_size);
+		memcpy(pkt + new_size, temp, pkt_size);
+		free(temp);
+		return pkt + new_size;
+	}
+
+	
+	memcpy(pkt + new_size, pkt, pkt_size);
+	memset(pkt, 0, pkt_size);
+
+	return pkt + new_size;	
+
+}
+
 bool_t node_unset_intf_ip_address(node_t* node, char* local_if){
 	
 	return TRUE;

@@ -28,3 +28,7 @@ show topo
 show topology
 show topology
 .
+show topology
+.
+run node eth0/0 resolve-arp 10.1.1.1
+run node H1 resolve-arp 10.1.1.1

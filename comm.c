@@ -15,13 +15,23 @@ static unsigned int udp_port_number = 40000;
 static char recv_buffer[MAX_PACKET_BUFFER_SIZE];
 static char send_buffer[MAX_PACKET_BUFFER_SIZE];
 
+extern void layer2_frame_recv(node_t* node, interface_t* interface, char* pkt, unsigned int pkt_size);
 
 int pkt_receive(node_t* node, interface_t* interface, char* pkt, unsigned int pkt_size){
+
 
 	/*Entery point into data link layer from physical layer
 	 *Ingress journey of the packey starts from
 	 *here in the TCP/IP stack*/
-	
+
+	//Make room in the packet buffer by shifting the data towards right 
+	//so that tcp/ip stack can append more hdrs to the packet as required
+	pkt = pkt_buffer_shift_right(pkt, pkt_size,
+			MAX_PACKET_BUFFER_SIZE - IF_NAME_SIZE);	
+
+
+	//Do further processing of the pkt here
+	layer2_frame_recv(node, interface, pkt, pkt_size);
 	printf("msg rcvd = '%s', on node = %s, IFF = %s\n", pkt, node->node_name, interface->if_name);	
 
 	return 0;

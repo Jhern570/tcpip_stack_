@@ -4,12 +4,13 @@ LIBS=-lpthread -L ./CommandParser -lcli
 TARGET=test.exe
 
 OBJS=gluethread/glthread.o \
+        Layer2/layer2.o	   \
      	graph.o		   \
 	topology.o         \
 	net.o		   \
 	utils.o		   \
 	nwcli.o		   \
-	comm.o
+	comm.o		
 	#topologies.o
 
 test.exe:testapp.o ${OBJS} CommandParser/libcli.a
@@ -20,6 +21,9 @@ testapp.o:testapp.c
 
 gluethread/glthread.o:gluethread/glthread.c
 	${CC} ${CFLAGS} -c -I  gluethread gluethread/glthread.c -o gluethread/glthread.o
+
+Layer2/layer2.o:Layer2/layer2.c
+	${CC} ${CFLAGS} -c -I Layer2 Layer2/layer2.c -o Layer2/layer2.o
 
 graph.o:graph.c
 	${CC} ${CFLAGS} -c -I . graph.c -o graph.o
