@@ -6,6 +6,7 @@
 #include "../net.h"
 #include "../gluethread/glthread.h"
 #include "../graph.h"
+#include "../tcpconst.h"
 
 #define ETH_HDR_SIZE_EXCL_PAYLOAD	\
 	(sizeof(ethernet_hdr_t) - sizeof(((ethernet_hdr_t*)0)->payload))
@@ -63,13 +64,20 @@ arp_entry_t* arp_table_lookup(arp_table_t* arp_table, char *ip_addr);
 
 void clear_arp_table(arp_table_t* arp_table);
 
+void delete_arp_entry(arp_entry_t* arp_entry);
+
 void delete_arp_table_entry(arp_table_t* arp_table, char *ip_addr);
 
-bool_t arp_table_entry_add(arp_table_t*  arp_table, arp_entry_t arp_entry);
+bool_t arp_table_entry_add(arp_table_t*  arp_table, arp_entry_t* arp_entry);
 
-void dump_arp_table(arp_table_t* arp_table);
+void arp_table_update_from_arp_reply(arp_table_t* arp_table, arp_hdr_t* arp_hdr, interface_t* iif);
 
-void arp_table_update_from_arp_reply(arp_table_t* arp_table, arp_hdr_t* arp_hdr, interface_t *intf);
+
+//Routine to resolve ARP out of OIF
+void send_arp_broadcast_request(node_t* node, interface_t* oif, char* ip_addr);
+
+
+
 
 //Dump API ARP Table
 void dump_arp_table(arp_table_t* art_table);
