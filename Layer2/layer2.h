@@ -82,6 +82,7 @@ void send_arp_broadcast_request(node_t* node, interface_t* oif, char* ip_addr);
 //Dump API ARP Table
 void dump_arp_table(arp_table_t* art_table);
 
+
 static inline void SET_COMMON_ETH_FCS(ethernet_hdr_t* eth_hdr, unsigned int pkt_siz, unsigned int new_fcs){
 
 	;
@@ -103,6 +104,11 @@ static inline ethernet_hdr_t* ALLOC_ETH_HDR_WITH_PAYLOAD(char* pkt, unsigned int
 
 	return eth_hdr;
  
+}
+
+static inline char* GET_ETHERNET_HDR_PAYLOAD(ethernet_hdr_t* ethernet_hdr){
+
+	return ethernet_hdr->payload;
 }
 
 static inline bool_t l2_frame_recv_qualify_on_interface(interface_t* interface, ethernet_hdr_t* ethernet_hdr){

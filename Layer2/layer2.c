@@ -60,7 +60,40 @@ void send_arp_broadcast_request(node_t* node, interface_t* oif, char* ip_addr){
 
 static void send_arp_reply_msg(ethernet_hdr_t* ethernet_hdr_in, interface_t* oif){
 
+	arp_hdr_t* arp_hdr_in = (arp_hdr_t*)(GET_ETHERNET_HDR_PAYLOAD)(ethernet_hdr_in);
 
+	ethernet_hdr_t* ethernet_hdr_reply = (ethernet_hdr_t*)calloc(1, sizeof(MAX_PACKET_BUFFER_SIZE));
+
+	memcpy(ethernet_hdr_reply->dst_mac.mac, arp_hdr_in->src_mac.mac, sizeof(mac_add_t));
+
+
+	ethernet_hdr_reply->type = ARP_MSG;
+
+	arp_hdr_t* arp_hdr_reply = (arp_hdr_t*)(GET_ETHERNET_HDR_PAYLOAD(ethernet_hdr_reply));
+
+	arp_hdr_reply->hw_type = 1;
+	arp_hdr_reply->proto_type = 0x0800;
+	arp_hdr_reply->hw_addr_len = (sizeof(mac_add_t));
+	arp_hdr_reply->proto_addr_len = 4;
+
+	arp_hdr_reply->op_code = ARP_REPLY;
+
+	memcpy(arp_hdr_reply->src_mac.mac, IF_MAC(oif), sizeof(mac_add_t));
+
+	inet_pton(AF_INET, IF_IP(oif), &arp_hdr_reply->src_ip);
+	arp_hdr_reply->src_ip = htonl(arp_hdr_reply->src_ip);
+
+	memcpy(arp_hdr_reply->dst_mac.mac, arp_hdr_in->src_mac.mac, sizeof(mac_add_t));
+	arp_hdr_reply->dst_ip = arp_hdr_in->src_ip;
+
+	ETH_FCS(ethernet_hdr_reply, sizeof(arp_hdr_t)) = 0;
+
+	unsigned int total_pkt_size = ETH_HDR_SIZE_EXCL_PAYLOAD + sizeof(arp_hdr_t);
+
+	char* shifted_pkt_buffer = pkt_buffer_shift_right((char*) ethernet_hdr_reply, total_pkt_size, MAX_PACKET_BUFFER_SIZE);
+
+	send_pkt_out(shifted_pkt_buffer, total_pkt_size, oif);
+	free(ethernet_hdr_reply);
 }
 
 static void process_arp_reply_msg(node_t* node, interface_t* iif, ethernet_hdr_t* ethernet_hdr){
@@ -70,6 +103,23 @@ static void process_arp_reply_msg(node_t* node, interface_t* iif, ethernet_hdr_t
 
 static void process_arp_broadcast_request(node_t* node, interface_t* iif, ethernet_hdr_t* ethernet_hdr){
 
+	printf("%s : ARP Broadcast msg recvd on interface %s of node %s\n", __FUNCTION__, iif->if_name, iif->att_node->node_name);
+
+	char ip_addr[16];
+
+	arp_hdr_t* arp_hdr = (arp_hdr_t*)(GET_ETHERNET_HDR_PAYLOAD(ethernet_hdr));
+
+	unsigned int arp_dst_ip = htonl(arp_hdr->dst_ip);
+	inet_ntop(AF_INET, &arp_dst_ip, ip_addr, 16);
+	ip_addr[15] = '\0';
+
+	if(strncmp(IF_IP(iif), ip_addr, 16) == 0){
+		printf("%s : ARP Broadcast req msg dropped, Dst IP address %s did not match with interface ip : %s\n",
+				node->node_name, ip_addr, IF_IP(iif));
+		return;
+	}
+
+	send_arp_reply_msg(ethernet_hdr, iif);
 
 }
 
