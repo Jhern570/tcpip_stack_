@@ -13,6 +13,8 @@ typedef struct arp_table_ arp_table_t;
 #define IF_IP(intf_ptr)   	((intf_ptr)->intf_nw_props.ip_add.ip_addr)
 
 #define NODE_LO_ADDR(node_ptr)	((node_ptr)->node_nw_prop.lb_addr.ip_addr)
+#define NODE_ARP_TABLE(node_ptr)	(node_ptr->node_nw_prop.arp_table)
+
 
 #define IS_INT_L3_MODE(intf_ptr) (intf_ptr->intf_nw_props.is_ipadd_config == TRUE)
 	

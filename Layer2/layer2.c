@@ -98,6 +98,12 @@ static void send_arp_reply_msg(ethernet_hdr_t* ethernet_hdr_in, interface_t* oif
 
 static void process_arp_reply_msg(node_t* node, interface_t* iif, ethernet_hdr_t* ethernet_hdr){
 
+	printf("%s : ARP reply msg received on interface %s of node %s\n",
+		       __FUNCTION__, iif->if_name, iif->att_node->node_name);
+
+	
+	arp_table_update_from_arp_reply(NODE_ARP_TABLE(node), (arp_hdr_t*)GET_ETHERNET_HDR_PAYLOAD(ethernet_hdr),iif);
+
 
 }
 
