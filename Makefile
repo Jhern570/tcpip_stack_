@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g
+CFLAGS=-g -O0 -Wall -Wextra
 LIBS=-lpthread -L ./CommandParser -lcli
 TARGET=test.exe
 

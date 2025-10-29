@@ -31,8 +31,7 @@ int pkt_receive(node_t* node, interface_t* interface, char* pkt, unsigned int pk
 
 
 	//Do further processing of the pkt here
-	layer2_frame_recv(node, interface, pkt, pkt_size);
-	printf("msg rcvd = '%s', on node = %s, IFF = %s\n", pkt, node->node_name, interface->if_name);	
+	layer2_frame_recv(node, interface, pkt, pkt_size);	
 
 	return 0;
 
@@ -51,8 +50,7 @@ static void _pkt_receive(node_t* receiving_node, char* pkt_with_aux_data, unsign
 		return;
 	}
 
-	printf("SIZEOF PACKET RECEIVED: %d\n", pkt_size);
-	printf("Packet before sent to pkt_recvd: %s\n", pkt_with_aux_data);
+	
 	pkt_receive(receiving_node, recv_intf, pkt_with_aux_data + IF_NAME_SIZE, pkt_size - IF_NAME_SIZE);
 }
 
@@ -62,11 +60,16 @@ static int _send_pkt_out(int sock_fd, char* pkt_data, unsigned int pkt_size, uns
 
 	struct sockaddr_in dest_addr;
 
-	struct hostent* host = (struct hostent *) gethostbyname("127.0.0.1");
+	//struct hostent* host = (struct hostent *) gethostbyname("127.0.0.1");
 	dest_addr.sin_family 	= AF_INET;
 	dest_addr.sin_port	= dst_udp_port_no;
-	dest_addr.sin_addr	= *((struct in_addr*)host->h_addr);
-
+	//dest_addr.sin_addr	= *((struct in_addr*)host->h_addr);
+	
+	// Safe numeric IP conversion, no heap allocation
+	if (inet_aton("127.0.0.1", &dest_addr.sin_addr) == 0) {
+    		fprintf(stderr, "Invalid IP address\n");
+    		return -1;
+	}
 	rc = sendto(sock_fd, pkt_data, pkt_size, 0, (struct sockaddr*)&dest_addr, sizeof(struct sockaddr));
 	
 	return rc;

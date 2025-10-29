@@ -5,6 +5,10 @@
 #include <stdio.h>
 
 extern graph_t* topo;
+typedef struct arp_table_ arp_table_t;
+
+extern void dump_arp_table(arp_table_t* arp_table);
+extern void send_arp_broadcast_request(node_t* node, interface_t* interface, char* ip_addr);
 
 void display_graph_nodes(param_t* param, ser_buff_t* tvl_buf){
 	node_t* node;
@@ -35,6 +39,27 @@ static int show_nw_topology_handler(param_t* param, ser_buff_t* tlv_buf,
 	
 }
 
+static int show_arp_handler(param_t* param, ser_buff_t* tlv_buf, op_mode enable_or_disable){
+
+	node_t* node;
+	char* node_name;
+
+	tlv_struct_t *tlv = NULL;
+
+	TLV_LOOP_BEGIN(tlv_buf, tlv){
+		if(strncmp(tlv->leaf_id, "node-name", strlen("node-name")) == 0){
+		
+			node_name = tlv->value;
+		}
+	}TLV_LOOP_END;
+
+	node = get_node_by_node_name(topo, node_name);
+		
+	dump_arp_table(NODE_ARP_TABLE(node));
+
+	return 0;
+}
+
 static int arp_handler(param_t* param, ser_buff_t* tlv_buf, op_mode){
 	
 	node_t* node;
@@ -52,6 +77,7 @@ static int arp_handler(param_t* param, ser_buff_t* tlv_buf, op_mode){
 	}TLV_LOOP_END;
 
 	node = get_node_by_node_name(topo, node_name);
+
 	send_arp_broadcast_request(node, NULL, ip_addr);
 	
 	/*if(!node){
@@ -88,7 +114,56 @@ void nw_init_cli(){
 			   "Dump Complete Network Topology");
 		libcli_register_param(show, &topology);
 		set_param_cmd_code(&topology, CMDCODE_SHOW_NW_TOPOLOGY);
+
+		 {
+                	/*show node*/
+                	static param_t node;
+                	init_param(&node,
+                           	CMD,
+                           	"node",
+                           	0,
+                           	0,
+                           	INVALID,
+                           	0,
+                           	"\"node\" keyword");
+                	libcli_register_param(show, &node);
+                	{
+
+                        	/*show node <node_name>*/
+                        	static param_t node_name;
+                        	init_param(&node_name,
+                                   	LEAF,
+                                  	0,
+                                   	0,
+                                   	0,
+                                   	STRING,
+                                   	"node-name",
+                                   	"Node-name");
+                        	libcli_register_param(&node, &node_name);
+                        	{
+
+                                	/*show node <node_name> arp*/
+                                	static param_t arp;
+                                	init_param(&arp,
+                                           	   CMD,
+                                           	   "arp",
+                                           	   show_arp_handler,
+						   0,
+						   INVALID,
+						   0,
+						   "Dump ARP table");
+					libcli_register_param(&node_name, &arp);
+					set_param_cmd_code(&arp, CMDCODE_SHOW_NODE_ARP_TABLE);
+	
+                        	}
+
+
+                	}
+
+
+        	}
 	}
+
 
 	{
 		/*run node*/
@@ -104,6 +179,7 @@ void nw_init_cli(){
 		libcli_register_param(run, &node);
 		libcli_register_display_callback(&node, display_graph_nodes);
 		{
+			/*run node <node_name>*/
 			static param_t node_name;
 			init_param(&node_name,
                            LEAF,

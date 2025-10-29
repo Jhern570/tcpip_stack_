@@ -113,11 +113,17 @@ static inline char* GET_ETHERNET_HDR_PAYLOAD(ethernet_hdr_t* ethernet_hdr){
 
 static inline bool_t l2_frame_recv_qualify_on_interface(interface_t* interface, ethernet_hdr_t* ethernet_hdr){
 	
-	if(!IS_INT_L3_MODE(interface)) return FALSE;
+	if(!IS_INT_L3_MODE(interface)){
+		return FALSE;
+	}
 
-	if(memcmp(IF_MAC(interface), ethernet_hdr->dst_mac.mac, sizeof(mac_add_t)) == 0) return TRUE;
+	if(memcmp(IF_MAC(interface), ethernet_hdr->dst_mac.mac, sizeof(mac_add_t)) == 0){
+	       	return TRUE;
+	}
 
-	if(IS_MAC_BROADCAST_ADDR(ethernet_hdr->dst_mac.mac)) return TRUE;
+	if(IS_MAC_BROADCAST_ADDR(ethernet_hdr->dst_mac.mac)){
+	       return TRUE;
+	}
 
 	return FALSE;
 }

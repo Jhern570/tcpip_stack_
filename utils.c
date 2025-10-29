@@ -35,6 +35,7 @@ void layer2_fill_with_broadcast_mac(char* mac_addr){
 	for(int i = 0; i < MAC_MAX_SIZE; i++){
 		mac_addr[i] = 0xFF;
 	}
+	
 }
 
 void tcp_ip_from_n_to_p(unsigned int ip_addr,

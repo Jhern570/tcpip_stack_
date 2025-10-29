@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include "../comm.h"
-
+#include <arpa/inet.h>
 
 //Routine to resolve ARP out of OIF
 void send_arp_broadcast_request(node_t* node, interface_t* oif, char* ip_addr){
@@ -11,23 +11,28 @@ void send_arp_broadcast_request(node_t* node, interface_t* oif, char* ip_addr){
 
         //Take memory which can accomodate Ethernet hdr + ARP hdr
         unsigned int payload_size = sizeof(arp_hdr_t);
+
         ethernet_hdr_t * ethernet_hdr = (ethernet_hdr_t*)calloc(1,
                                                 ETH_HDR_SIZE_EXCL_PAYLOAD + payload_size);
 
+	
         if(!oif){
+
                 oif = node_get_matching_subnet_interface(node, ip_addr);
+
                 if(!oif){
                         printf("ERROR : %s : No eligible subnet for ARP resolution for IP-Address %s\n",
                                         node->node_name, ip_addr);
                        return;
                 }
 
-        }
+        
+	}
+
         //STEP 1: Prepare the header
         layer2_fill_with_broadcast_mac(ethernet_hdr->dst_mac.mac);
         memcpy(ethernet_hdr->src_mac.mac, IF_MAC(oif), sizeof(mac_add_t));
         ethernet_hdr->type = ARP_MSG;
-
 
         //Step 2: Prepare ARP broadcast request msg our of oif
         arp_hdr_t* arp_hdr = (arp_hdr_t*)ethernet_hdr->payload;
@@ -51,7 +56,9 @@ void send_arp_broadcast_request(node_t* node, interface_t* oif, char* ip_addr){
         //ethernet header!!
         ETH_FCS(ethernet_hdr, sizeof(arp_hdr_t)) = 0;
 
+
         //Step 3 : Now dispatch the ARP broadcasst packet out of interface
+	
         send_pkt_out((char*)ethernet_hdr, ETH_HDR_SIZE_EXCL_PAYLOAD + payload_size, oif);
 
         free(ethernet_hdr);
@@ -60,12 +67,12 @@ void send_arp_broadcast_request(node_t* node, interface_t* oif, char* ip_addr){
 
 static void send_arp_reply_msg(ethernet_hdr_t* ethernet_hdr_in, interface_t* oif){
 
-	arp_hdr_t* arp_hdr_in = (arp_hdr_t*)(GET_ETHERNET_HDR_PAYLOAD)(ethernet_hdr_in);
+	arp_hdr_t* arp_hdr_in = (arp_hdr_t*)(GET_ETHERNET_HDR_PAYLOAD(ethernet_hdr_in));
 
-	ethernet_hdr_t* ethernet_hdr_reply = (ethernet_hdr_t*)calloc(1, sizeof(MAX_PACKET_BUFFER_SIZE));
+	ethernet_hdr_t* ethernet_hdr_reply = (ethernet_hdr_t*)calloc(1, MAX_PACKET_BUFFER_SIZE);
 
 	memcpy(ethernet_hdr_reply->dst_mac.mac, arp_hdr_in->src_mac.mac, sizeof(mac_add_t));
-
+	memcpy(ethernet_hdr_reply->src_mac.mac, IF_MAC(oif), sizeof(mac_add_t));
 
 	ethernet_hdr_reply->type = ARP_MSG;
 
@@ -102,6 +109,22 @@ static void process_arp_reply_msg(node_t* node, interface_t* iif, ethernet_hdr_t
 		       __FUNCTION__, iif->if_name, iif->att_node->node_name);
 
 	
+	arp_hdr_t* test = (arp_hdr_t*)GET_ETHERNET_HDR_PAYLOAD(ethernet_hdr);
+	/*printf("testing header:\n \
+			hw: %hd\n \
+			prot: %hd\n \
+			hw_addr_len: %d\n \
+			proto_addr__len: %d\n \
+			op_code: %hd\n \
+			src_mac[0]: %02x\n \
+			src_ip: %u\n \
+			dst_mac[0]: %02x\n \
+			dst_ip: %u\n",
+			test->hw_type, test->proto_type, test->hw_addr_len, test->proto_addr_len,
+			test->op_code, test->src_mac.mac[0], test->src_ip, test->dst_mac.mac[0], test->dst_ip);
+
+	printf("size of src mac and dst mac: %u | %u\n", sizeof(test->src_mac), sizeof(test->dst_mac));
+	*/
 	arp_table_update_from_arp_reply(NODE_ARP_TABLE(node), (arp_hdr_t*)GET_ETHERNET_HDR_PAYLOAD(ethernet_hdr),iif);
 
 
@@ -119,7 +142,7 @@ static void process_arp_broadcast_request(node_t* node, interface_t* iif, ethern
 	inet_ntop(AF_INET, &arp_dst_ip, ip_addr, 16);
 	ip_addr[15] = '\0';
 
-	if(strncmp(IF_IP(iif), ip_addr, 16) == 0){
+	if(strncmp(IF_IP(iif), ip_addr, 16)){
 		printf("%s : ARP Broadcast req msg dropped, Dst IP address %s did not match with interface ip : %s\n",
 				node->node_name, ip_addr, IF_IP(iif));
 		return;
@@ -129,10 +152,51 @@ static void process_arp_broadcast_request(node_t* node, interface_t* iif, ethern
 
 }
 
+void promote_pkt_to_layer3(node_t* node, interface_t* interface, char* pkt, unsigned int pkt_size){
+	;
+}
+
 void layer2_frame_recv(node_t* node, interface_t* interface, char* pkt, unsigned int pkt_size) {
 	
 	//Entry point into TCP/IP stack from bottom
 	
+
+	ethernet_hdr_t* ethernet_hdr = (ethernet_hdr_t*)pkt;
+
+	if(l2_frame_recv_qualify_on_interface(interface, ethernet_hdr) == FALSE){
+		printf("L2 Frame Rejected!\n");
+		return;
+	}
+
+	printf("L2 Frame Accepted\n");
+
+	switch(ethernet_hdr->type){
+	
+		case ARP_MSG:
+			{
+				arp_hdr_t* arp_hdr = (arp_hdr_t*) (ethernet_hdr->payload);
+				
+				switch(arp_hdr->op_code){
+				
+					case ARP_BROADCAST_REQ:
+						process_arp_broadcast_request(node, interface, ethernet_hdr);
+						break;
+
+					case ARP_REPLY:
+					
+						process_arp_reply_msg(node, interface, ethernet_hdr);
+						break;
+
+					default:
+						break;
+				}
+			}
+			break;
+
+		default:
+			promote_pkt_to_layer3(node, interface,pkt,pkt_size);
+			break;
+	}
 
 }
 
@@ -167,9 +231,9 @@ void clear_arp_table(arp_table_t* arp_table){
 
 void delete_arp_entry(arp_entry_t* arp_entry){
 
-	glthread_t* curr;
-
 	remove_glthread(&arp_entry->arp_glue);
+
+	free(arp_entry);
 
 }
 void delete_arp_table_entry(arp_table_t* arp_table, char *ip_addr){
@@ -203,16 +267,16 @@ bool_t arp_table_entry_add(arp_table_t*  arp_table, arp_entry_t* arp_entry){
 }
 
 void arp_table_update_from_arp_reply(arp_table_t* arp_table, arp_hdr_t* arp_hdr, interface_t *iif){
+	
 
 	unsigned int src_ip = 0;
 
 	assert(arp_hdr->op_code == ARP_REPLY);
 
-	arp_entry_t* arp_entry = calloc(1, sizeof(arp_entry_t));
 
-	src_ip = htonl(arp_hdr->src_ip);
-	
-	inet_ntop(AF_INET, src_ip, &arp_entry->ip_addr.ip_addr, 16);
+	arp_entry_t* arp_entry = calloc(1, sizeof(arp_entry_t));
+	src_ip = htonl(arp_hdr->src_ip);	
+	inet_ntop(AF_INET, &src_ip, &arp_entry->ip_addr.ip_addr, 16);
 	arp_entry->ip_addr.ip_addr[15] = '\0';
 
 	memcpy(arp_entry->mac_addr.mac, arp_hdr->src_mac.mac, sizeof(mac_add_t));

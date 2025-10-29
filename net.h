@@ -1,6 +1,7 @@
 #ifndef __NET__
 #define __NET__
 
+#include "utils.h"
 #include <memory.h>
 
 typedef struct graph_ graph_t;
@@ -28,7 +29,7 @@ typedef enum{
   TRUE 
 } bool_t;
 
-
+#pragma pack(push,1)
 typedef struct ip_add_{
 	char ip_addr[16];
 } ip_add_t;
@@ -36,7 +37,7 @@ typedef struct ip_add_{
 typedef struct mac_add_{
 	unsigned char mac[6];
 }mac_add_t;
-
+#pragma pack(pop)
 typedef struct node_nw_prop{
 	
 	/*Used to find various device types capabilities of

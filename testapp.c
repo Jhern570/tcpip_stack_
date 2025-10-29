@@ -40,7 +40,7 @@ int main(int argc, char **argv){
 	nw_init_cli();
 		
 	printf("Building topo...\n");
-	topo = build_linear_topo();
+	topo = build_first_topo();
 
 
 	if(!topo){
