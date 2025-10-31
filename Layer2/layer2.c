@@ -290,6 +290,32 @@ void arp_table_update_from_arp_reply(arp_table_t* arp_table, arp_hdr_t* arp_hdr,
 
 }
 
+//L2 mode configuration API
+void interface_set_l2_mode(node_t* node, interface_t* interface, char* l2_mode_option){
+	
+	intf_l2_mode_t intf_l2_mode;
+
+	if(strncmp(l2_mode_option, "access", strlen("access")) == 0){
+		intf_l2_mode = ACCESS;
+	}else if(strncmp(l2_mode_option, "trunk", strlen("trunk")) == 0){
+		intf_l2_mode = TRUNK;
+	}else{
+		assert(0);
+	}
+
+	IF_L2_MODE(interface) = intf_l2_mode;
+	return;
+}
+
+void node_set_intf_l2_mode(node_t* node, char* intf_name, intf_l2_mode_t intf_l2_mode){
+
+	interface_t* interface = get_node_if_by_name(node, intf_name);
+	assert(interface);
+
+	interface_set_l2_mode(node, interface, intf_l2_mode_str(intf_l2_mode));
+}
+
+
 //Dump API ARP Table
 void dump_arp_table(arp_table_t* arp_table){
 

@@ -6,7 +6,7 @@
 //extern functions of topologies build
 extern graph_t *build_first_topo();
 extern graph_t *build_linear_topo();
-
+extern graph_t *build_simple_l2_switch_topo();
 
 //extern functions from comm.c
 extern int send_pkt_out(char *pkt, unsigned int pkt_size, interface_t* interface);
@@ -24,23 +24,10 @@ graph_t* topo = NULL;
 int main(int argc, char **argv){
 
 	
-	char ip[16] = "192.15.1.23";
-	ip[15] = '0';
-
-	unsigned int ip_n = tcp_ip_from_p_to_n(ip);
-
-	printf("TCP N: %u\n", ip_n);
-	
-	tcp_ip_from_n_to_p(ip_n, ip);
-	
-	printf("TCP P: %s\n", ip);
-	
-	
-	printf("Starting CLI\n");
 	nw_init_cli();
 		
-	printf("Building topo...\n");
-	topo = build_first_topo();
+	printf("Building topo...\n\n");
+	topo = build_simple_l2_switch_topo();
 
 
 	if(!topo){

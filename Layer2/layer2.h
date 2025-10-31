@@ -77,6 +77,8 @@ void arp_table_update_from_arp_reply(arp_table_t* arp_table, arp_hdr_t* arp_hdr,
 void send_arp_broadcast_request(node_t* node, interface_t* oif, char* ip_addr);
 
 
+//L2 mode configure API
+void node_set_intf_l2_mode(node_t* node, char* intf_name, intf_l2_mode_t intf_l2_mode);
 
 
 //Dump API ARP Table

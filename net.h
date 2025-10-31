@@ -17,6 +17,7 @@ typedef struct arp_table_ arp_table_t;
 #define NODE_ARP_TABLE(node_ptr)	(node_ptr->node_nw_prop.arp_table)
 
 
+#define IF_L2_MODE(intf_ptr) (intf_ptr->intf_nw_props.intf_l2_mode)
 #define IS_INT_L3_MODE(intf_ptr) (intf_ptr->intf_nw_props.is_ipadd_config == TRUE)
 	
 
@@ -29,6 +30,13 @@ typedef enum{
   TRUE 
 } bool_t;
 
+typedef enum{
+
+	ACCESS,
+	TRUNK,
+	L2_MODE_UNKNOWN
+} intf_l2_mode_t;
+
 #pragma pack(push,1)
 typedef struct ip_add_{
 	char ip_addr[16];
@@ -38,6 +46,7 @@ typedef struct mac_add_{
 	unsigned char mac[6];
 }mac_add_t;
 #pragma pack(pop)
+
 typedef struct node_nw_prop{
 	
 	/*Used to find various device types capabilities of
@@ -53,6 +62,22 @@ typedef struct node_nw_prop{
 	ip_add_t lb_addr; //loopback address of node
 }node_nw_prop_t;
 
+static inline char* intf_l2_mode_str(intf_l2_mode_t intf_l2_mode){
+
+	switch(intf_l2_mode){
+	
+		case ACCESS:
+			return "access";
+			break;
+		case TRUNK:
+			return "trunk";
+			break;
+		default:
+			return "L2_MODE_UNKNOWN";
+	}
+	
+}
+
 static inline void init_node_nw_prop(node_nw_prop_t* node_nw_prop){
 	
 	node_nw_prop->flag = 0;
@@ -64,12 +89,17 @@ static inline void init_node_nw_prop(node_nw_prop_t* node_nw_prop){
 typedef struct intf_nw_props_{
 	//L2 properties
 	mac_add_t mac_add; //MAC are hard burnt in interface NIC
+	intf_l2_mode_t intf_l2_mode;
+
 
 	//L3 properties
 	bool_t is_ipadd_config; //Set to TRUE if ip add is configured, intf operates in L3 mode if ip address is configured on it
 	ip_add_t ip_add;
 	char mask;
+
 }intf_nw_props_t;
+
+
 
 static inline void init_intf_nw_prop(intf_nw_props_t* intf_nw_props){
 
