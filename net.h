@@ -9,13 +9,15 @@ typedef struct interface_ interface_t;
 typedef struct node_ node_t;
 
 typedef struct arp_table_ arp_table_t;
+typedef struct mac_table_ mac_table_t;
+
 
 #define IF_MAC(intf_ptr)   	((intf_ptr)->intf_nw_props.mac_add.mac)
 #define IF_IP(intf_ptr)   	((intf_ptr)->intf_nw_props.ip_add.ip_addr)
 
 #define NODE_LO_ADDR(node_ptr)	((node_ptr)->node_nw_prop.lb_addr.ip_addr)
 #define NODE_ARP_TABLE(node_ptr)	(node_ptr->node_nw_prop.arp_table)
-
+#define NODE_MAC_TABLE(node_ptr)	(node_ptr->node_nw_prop.mac_table)
 
 #define IF_L2_MODE(intf_ptr) (intf_ptr->intf_nw_props.intf_l2_mode)
 #define IS_INT_L3_MODE(intf_ptr) (intf_ptr->intf_nw_props.is_ipadd_config == TRUE)
@@ -56,6 +58,8 @@ typedef struct node_nw_prop{
 	
 	//L2 properties
 	arp_table_t* arp_table;
+	mac_table_t* mac_table;
+
 	
 	//L3 properties
 	bool_t is_lb_addr_config;

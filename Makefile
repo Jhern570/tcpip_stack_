@@ -3,13 +3,14 @@ CFLAGS=-g -O0 -Wall -Wextra
 LIBS=-lpthread -L ./CommandParser -lcli
 TARGET=test.exe
 
-OBJS=gluethread/glthread.o \
-        Layer2/layer2.o	   \
-     	graph.o		   \
-	topology.o         \
-	net.o		   \
-	utils.o		   \
-	nwcli.o		   \
+OBJS=gluethread/glthread.o 	\
+        Layer2/layer2.o	   	\
+	Layer2/l2switch.o	\
+     	graph.o		   	\
+	topology.o         	\
+	net.o		   	\
+	utils.o		   	\
+	nwcli.o		   	\
 	comm.o		
 	#topologies.o
 
@@ -24,6 +25,9 @@ gluethread/glthread.o:gluethread/glthread.c
 
 Layer2/layer2.o:Layer2/layer2.c
 	${CC} ${CFLAGS} -c -I Layer2 Layer2/layer2.c -o Layer2/layer2.o
+
+Layer2/l2switch.o:Layer2/l2switch.c
+	${CC} ${CFLAGS} -c -I Layer2 Layer2/l2switch.c -o Layer2/l2switch.o
 
 graph.o:graph.c
 	${CC} ${CFLAGS} -c -I . graph.c -o graph.o
@@ -49,6 +53,7 @@ CommandParser/libcli.a:
 clean:
 	rm *.o
 	rm gluethread/glthread.o
+	rm Layer2/*.o
 	rm *exe
 	(cd CommandParser; make clean)
 all:

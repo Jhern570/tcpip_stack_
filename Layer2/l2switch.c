@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "layer2.h"
 #include "../gluethread/glthread.h"
+#include "../comm.h"
+
 
 #define IS_MAC_TABLE_ENTRY_EQUAL(mac_entry_1, mac_entry_2) \
 	(strncmp(mac_entry_1->mac.mac, mac_entry_2->mac.mac, sizeof(mac_add_t)) == 0 && \
@@ -25,6 +27,25 @@ typedef struct mac_table_{
 
 GLTHREAD_TO_STRUCT(mac_entry_glue_to_mac_entry,mac_table_entry_t, mac_entry_glue);
 
+bool_t mac_table_entry_add(mac_table_t* mac_table, mac_table_entry_t* mac_table_entry);
+
+
+static void l2_switch_perform_mac_learning(node_t* node, char* src_mac, char*if_name){
+	bool_t rc;
+
+	mac_table_entry_t* mac_table_entry = calloc(1, sizeof(mac_table_entry_t));
+
+	memcpy(mac_table_entry->mac.mac, src_mac, sizeof(mac_add_t));
+	strncpy(mac_table_entry->oif_name, if_name, IF_NAME_SIZE);
+
+	mac_table_entry->oif_name[15] = '\0';
+	
+	rc = mac_table_entry_add(NODE_MAC_TABLE(node), mac_table_entry);	
+	
+	if(rc == FALSE){
+		free(mac_table_entry);
+	}
+}
 
 void init_mac_table(mac_table_t** mac_table){
 
@@ -140,3 +161,49 @@ static void l2_switch_perform_mac_learning(node_t* node, char* src_mac, char* if
 		free(mac_table_entry);
 	}
 }*/
+
+static void l2_switch_forward_frame(node_t* node, interface_t* recv_intf, char* pkt, unsigned int pkt_size){
+	
+	//if dst mac is broadcast mac, then flood the frame
+	ethernet_hdr_t* ethernet_hdr = (ethernet_hdr_t*)pkt;
+
+	if(IS_MAC_BROADCAST_ADDR(ethernet_hdr->dst_mac.mac)){
+	
+		send_pkt_flood_l2_intf_only(node, recv_intf, pkt, pkt_size);
+		return;
+	}
+
+	//check mac table to forward the frame
+	mac_table_entry_t* mac_table_entry = 
+		mac_table_lookup(NODE_MAC_TABLE(node), ethernet_hdr->dst_mac.mac);
+
+	if(!mac_table_entry){
+	
+		send_pkt_flood_l2_intf_only(node, recv_intf, pkt, pkt_size);
+		return;
+	}
+
+	char* oif_name = mac_table_entry->oif_name;
+
+	interface_t* oif = get_node_if_by_name(node, oif_name);
+
+	if(!oif){
+		return;
+	}
+
+	send_pkt_out(pkt, pkt_size, oif);
+}
+
+void l2_switch_recv_frame(interface_t* interface, char* pkt, unsigned int pkt_size){
+
+	node_t* node = interface->att_node;
+	ethernet_hdr_t* ethernet_hdr = (ethernet_hdr_t*)pkt;
+
+	char* dst_mac = (char*)ethernet_hdr->dst_mac.mac;
+	char* src_mac = (char*)ethernet_hdr->src_mac.mac;
+
+	
+	l2_switch_perform_mac_learning(node, src_mac, interface->if_name);
+	//l2_switch_forward_frame(node, interface, pkt, pkt_size);
+	
+}

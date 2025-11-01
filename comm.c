@@ -133,7 +133,24 @@ int send_pkt_flood(node_t* node, interface_t* exempted_interface, char* pkt, uns
 	return 0;
 }
 
+int send_pkt_flood_l2_intf_only(node_t* node, interface_t* exempted_intf, char* pkt, unsigned int pkt_size){
 
+	unsigned int i = 0;
+	interface_t* intf;
+
+	for(; i < MAX_INTF_PER_NODE; i++){
+	
+		intf = node->intf[i];
+
+		if(!intf) continue;
+
+		if(intf == exempted_intf) continue;
+		
+		if(IS_INT_L3_MODE(intf)) continue;
+
+		send_pkt_out(pkt, pkt_size, intf);
+	}
+}
 
 static unsigned int get_next_udp_port_number(){
 
