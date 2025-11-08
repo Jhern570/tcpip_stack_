@@ -14,6 +14,8 @@
 #define ETH_FCS(eth_hdr_ptr,payload_size) \
 	(*(unsigned int*)(((char*)(((ethernet_hdr_t*)eth_hdr_ptr)->payload) + payload_size)))	
 
+#define VLAN_8021Q_PROTO	0x8100
+
 
 #pragma pack (push,1)
 typedef struct arp_hdr_{
@@ -38,6 +40,28 @@ typedef struct ethernet_hdr_{
 	unsigned int FCS;
 
 }ethernet_hdr_t;
+#pragma pack(pop)
+
+//VLAN ethernet header struct
+#pragma pack(push, 1)
+typedef struct vlan_8021q_hdr_{
+
+	unsigned short tpid; //0x8100
+	short tci_pcp : 3; // initial 4 bits; not used
+	short tci_dei : 1; // not used
+	short tci_vid : 12; // tagged vlan id
+
+} vlan_8021q_hdr_t;
+
+typedef struct vlan_ethernet_hdr_{
+
+	mac_add_t dst_mac;
+        mac_add_t src_mac;
+	vlan_8021q_hdr_t vlan_8021q_hdr;
+        unsigned short type;
+        char payload[248]; //eg. arp header
+        unsigned int FCS;
+} vlan_ethernet_hdr_t;
 #pragma pack(pop)
 
 
@@ -79,6 +103,21 @@ void send_arp_broadcast_request(node_t* node, interface_t* oif, char* ip_addr);
 
 //L2 mode configure API
 void node_set_intf_l2_mode(node_t* node, char* intf_name, intf_l2_mode_t intf_l2_mode);
+
+
+//VLAN APIs
+
+static inline vlan_8021q_hdr_t* is_packet_vlan_tagged(ethernet_hdr_t* ethernet_hdr){
+	
+	vlan_8021q_hdr_t* vlan_8021q_hdr = (vlan_8021q_hdr_t*)((char*)ethernet_hdr + (sizeof(mac_add_t) * 2));
+
+	if(vlan_8021q_hdr->tpid == VLAN_8021Q_PROTO){
+		return vlan_8021q_hdr;
+	}else{
+		return NULL;
+	}
+
+}
 
 
 //Dump API ARP Table
