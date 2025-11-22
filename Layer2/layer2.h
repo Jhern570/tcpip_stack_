@@ -11,8 +11,21 @@
 #define ETH_HDR_SIZE_EXCL_PAYLOAD	\
 	(sizeof(ethernet_hdr_t) - sizeof(((ethernet_hdr_t*)0)->payload))
 
+#define VLAN_ETH_HDR_SIZE_EXCL_PAYLOAD	\
+	(sizeof(vlan_ethernet_hdr_t) - sizeof(((vlan_ethernet_hdr_t*)0)->payload))
+
 #define ETH_FCS(eth_hdr_ptr,payload_size) \
 	(*(unsigned int*)(((char*)(((ethernet_hdr_t*)eth_hdr_ptr)->payload) + payload_size)))	
+
+
+#define VLAN_ETH_FCS(vlan_eth_hdr_ptr, payload_size) \
+	(*(unsigned int*)(((char*)(((vlan_ethernet_hdr_t*)vlan_eth_hdr_ptr)->payload) + payload_size)))
+
+
+#define GET_COMMON_ETH_FCS(eth_hdr_ptr, payload_size)	\
+	((vlan_ethernet_hdr_t*)eth_hdr_ptr->type) == 0x8100 ? \
+	VLAN_ETH_FCS(eth_hdr_ptr, payload_size) : ETH_FCS(eth_hdr_ptr, payload_size)
+
 
 #define VLAN_8021Q_PROTO	0x8100
 
@@ -119,14 +132,25 @@ static inline vlan_8021q_hdr_t* is_packet_vlan_tagged(ethernet_hdr_t* ethernet_h
 
 }
 
+static inline unsigned int GET_802_1Q_VLAN_ID(vlan_8021q_hdr_t *vlan_8021q_hdr){
+	
+	return (unsigned int)vlan_8021q_hdr->tpid;
+
+}
 
 //Dump API ARP Table
 void dump_arp_table(arp_table_t* art_table);
 
+static inline void SET_COMMON_ETH_FCS(ethernet_hdr_t* eth_hdr, unsigned int pkt_size, unsigned int new_fcs){
 
-static inline void SET_COMMON_ETH_FCS(ethernet_hdr_t* eth_hdr, unsigned int pkt_siz, unsigned int new_fcs){
+	vlan_8021q_hdr_t* vlan_8021q_hdr = is_packet_vlan_tagged(eth_hdr);
+	if(vlan_8021q_hdr){
+		VLAN_ETH_FCS(eth_hdr, pkt_size) = new_fcs;
+	}else{
 
-	;
+		ETH_FCS(eth_hdr, pkt_size) = new_fcs;
+	}
+
 }
 
 
@@ -138,6 +162,7 @@ static inline ethernet_hdr_t* ALLOC_ETH_HDR_WITH_PAYLOAD(char* pkt, unsigned int
 	ethernet_hdr_t* eth_hdr = (ethernet_hdr_t*)(pkt - ETH_HDR_SIZE_EXCL_PAYLOAD);
 
 	memset((char*)eth_hdr, 0 , ETH_HDR_SIZE_EXCL_PAYLOAD);
+	
 	memcpy(eth_hdr->payload, temp, pkt_size);
 
 	SET_COMMON_ETH_FCS(eth_hdr, pkt_size, 0);
@@ -149,8 +174,29 @@ static inline ethernet_hdr_t* ALLOC_ETH_HDR_WITH_PAYLOAD(char* pkt, unsigned int
 
 static inline char* GET_ETHERNET_HDR_PAYLOAD(ethernet_hdr_t* ethernet_hdr){
 
+
+	vlan_8021q_hdr_t* vlan_8021q_hdr = is_packet_vlan_tagged(ethernet_hdr);
+	
+	if(vlan_8021q_hdr){
+		vlan_ethernet_hdr_t* vlan_ethernet_hdr = (vlan_ethernet_hdr_t*)ethernet_hdr;
+		return vlan_ethernet_hdr->payload;
+	}
+
 	return ethernet_hdr->payload;
 }
+
+static inline unsigned int GET_ETHERNET_HDR_SIZE_EXCL_PAYLOAD(ethernet_hdr_t* ethernet_hdr){
+
+	
+	vlan_8021q_hdr_t* vlan_8021q_hdr = is_packet_vlan_tagged(ethernet_hdr);
+	
+	if(vlan_8021q_hdr){
+		return VLAN_ETH_HDR_SIZE_EXCL_PAYLOAD;
+	}
+	
+	return ETH_HDR_SIZE_EXCL_PAYLOAD;
+}
+
 
 static inline bool_t l2_frame_recv_qualify_on_interface(interface_t* interface, ethernet_hdr_t* ethernet_hdr){
 	
@@ -169,5 +215,29 @@ static inline bool_t l2_frame_recv_qualify_on_interface(interface_t* interface, 
 	return FALSE;
 }
 
-#endif
 
+static inline bool_t is_tagged_arp_broadcast_request_msg(ethernet_hdr_t* ethernet_hdr){
+
+
+	vlan_8021q_hdr_t* vlan_8021q_hdr = is_packet_vlan_tagged(ethernet_hdr);
+
+	if(vlan_8021q_hdr){
+	
+		if(vlan_8021q_hdr->tci_vid >= 10 || vlan_8021q_hdr->tci_vid <= 20){
+			vlan_ethernet_hdr_t* vlan_ethernet_hdr = (vlan_ethernet_hdr_t*)ethernet_hdr;
+
+			arp_hdr_t* arp_hdr = (arp_hdr_t*)vlan_ethernet_hdr->payload;
+
+			if(IS_MAC_BROADCAST_ADDR(arp_hdr->dst_mac.mac)){
+				return TRUE;
+			}
+			
+		}
+	}
+
+	return FALSE;
+	
+}
+
+
+#endif
